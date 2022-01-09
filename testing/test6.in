@@ -1,0 +1,4 @@
+new 8
+play -2 -2
+play 2 10
+^d

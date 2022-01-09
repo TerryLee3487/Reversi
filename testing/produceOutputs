@@ -1,0 +1,28 @@
+#!/bin/bash
+
+## terminates with non-zero exit code if called with incorrect number of command-line args. Outputs error message to stderr
+if [ $# -ne 2 ]; then
+    echo "${0} expects 2 command-line arguments."
+    exit 1
+fi
+
+## loop through every test in the test file 
+for test in $(cat "${1}"); do
+    ## checks if corresponding .args file exists and regular
+    if [ -f "${test}.args" ]; then
+        ## if corresponding .in file exists, run as stdin
+        if [ -f "${test}.in" ]; then
+            ${2} $(cat ${test}.args) < ${test}.in > ${test}.out
+        else 
+            ${2} $(cat ${test}.args) > ${test}.out
+        fi
+    else
+        ## if only the .in file exists, run as stdin
+        if [ -f "${test}.in" ]; then
+            ${2} < ${test}.in > ${test}.out
+        else
+            ${2} > ${test}.out
+        fi
+    fi
+done
+

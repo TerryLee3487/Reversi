@@ -1,0 +1,6 @@
+new 6
+play 6 6
+play -1 -1
+play 0 0
+play 5 5
+^d

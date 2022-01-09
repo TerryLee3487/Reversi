@@ -1,0 +1,61 @@
+#!/bin/bash
+
+## check if the number of command line arguments is correct
+if [ $# -ne 2 ]; then
+	echo "${0} expects 2 command-line arguments" 1>&2
+	exit 1
+fi
+
+# loop through every test in the test file
+for test in $(cat ${1}); do
+
+	# create a temporary file to store the output 
+	tempFile=$(mktemp /tmp/file.XXX)
+	
+
+	## check if .args file is an existing regular file
+	if [ -f ${test}.args ]; then
+		## if .in exists and is a regular file, use as stdin
+		if [ -f ${test}.in ]; then
+			${2} $(cat ${test}.args) < ${test}.in > ${tempFile}
+		else
+			${2} $(cat ${test}.args) > ${tempFile}
+		fi
+	else 
+		# if .in file exists but .args file does not, use .in file as stdin for the program being tested
+		if [ -f ${test}.in ]; then 
+			${2} < ${test}.in > ${tempFile}
+		else
+			${2} > ${tempFile}
+		fi
+	fi
+	# check if corresponding .out file is existing and readable
+	if [ -r ${test}.out ]; then
+		#check if the output is different than expected
+		cmp -s ${tempFile} ${test}.out
+		# if different, print failure message
+		if [ $? != 0 ]; then
+			echo Test failed: ${test}
+			echo Args:
+			# print .args contents if it exists
+			if [ -f ${test}.args ]; then
+				cat ${test}.args
+			fi
+			echo Input:
+			# print .in contents if it exists
+			if [ -f ${test}.in ]; then
+				cat ${test}.in
+			fi
+			echo Expected:
+			cat ${test}.out
+			echo Actual:
+			cat ${tempFile}
+		fi
+	# terminates if any .out file is missing or unreadable
+	else 
+		echo "${test}.out does not exist or is unreadable" 1>&2
+		exit 2
+	fi
+	# delete temporary file created earlier
+	rm ${tempFile}
+done
